@@ -479,6 +479,37 @@ local function construct_txt(timestamp)
     return txt
 end
 
+--[[
+ASS format we need
+https://github.com/Kaleido-subs/project-template/blob/main/01/NewShow%20-%2001%20-%20Dialogue.ass#L24-L33
+https://github.com/TypesettingTools/SubKt/tree/master/docs/subkt/myaa.subkt.tasks/-chapters
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Comment: 0,0:00:00.00,0:00:00.00,Default,,0,0,0,,{=0}---- Chapters
+Comment: 0,0:00:00.00,0:00:00.00,Default,chapter,0,0,0,,Chapter 01
+Comment: 0,0:01:00.00,0:00:00.00,Default,chapter,0,0,0,,Chapter 02
+…
+Comment: 0,0:00:00.00,0:00:00.00,Default,,0,0,0,,{=1}---- Chapters
+
+]]
+
+local function construct_ass()
+    local all_chapters = mp.get_property_native("chapter-list")
+    local ass = ""
+    ass = ass .. "[Events]\n"
+    ass = ass .. "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n"
+    ass = ass .. "Comment: 0,0:00:00.00,0:00:00.00,Default,,0,0,0,,{=0}---- Chapters\n"
+
+    for i, c in ipairs(all_chapters) do
+        ass = ass .. "Comment: 0," .. seconds_to_hhmmss(c.time, 2) .. ",0:00:00.00,Default,chapter,0,0,0,," .. c.title .. "\n"
+    end
+
+    ass = ass .. "Comment: 0,0:00:00.00,0:00:00.00,Default,,0,0,0,,{=1}---- Chapters\n"
+
+    return ass
+end
+
 
 --[[
 format that we need
@@ -607,6 +638,8 @@ local function write(...)
         success, error = chapters_file:write(construct_ffmetadata())
     elseif format == "ffmetadata.tmp" then
         success, error = chapters_file:write(construct_ffmetadata(chapter_zero))
+    elseif format == "ass" then
+        success, error = chapters_file:write(construct_ass())
     end
 
     chapters_file:close()
@@ -832,6 +865,7 @@ mp.add_key_binding(nil, "edit_chapter", edit_chapter)
 mp.add_key_binding(nil, "write_chapters", function () write("ffmetadata",true, true, true) end)
 mp.add_key_binding(nil, "write_xml", function () write("xml", true, false, true) end)
 mp.add_key_binding(nil, "write_txt", function () write("txt", true, false, true) end)
+mp.add_key_binding(nil, "write_ass", function () write("ass", true, false, true) end)
 mp.add_key_binding(nil, "write_list", function () write("list.txt", true, false, true) end)
 mp.add_key_binding(nil, "write_ffmetadata", function () write("ffmetadata", true, false, true) end)
 mp.add_key_binding(nil, "bake_chapters", bake_chapters)
